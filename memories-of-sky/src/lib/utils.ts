@@ -14,11 +14,11 @@ export const SEASON_COLORS: Record<Season, string> = {
   winter: '#BDC3C7',
 }
 
-export const SEASON_LABELS: Record<Season, string> = {
-  spring: '春',
-  summer: '夏',
-  autumn: '秋',
-  winter: '冬',
+export const SEASON_LABELS: Record<Season, { jp: string; zh: string; en: string }> = {
+  spring: { jp: 'はる', zh: '春', en: 'Spring' },
+  summer: { jp: 'なつ', zh: '夏', en: 'Summer' },
+  autumn: { jp: 'あき', zh: '秋', en: 'Autumn' },
+  winter: { jp: 'ふゆ', zh: '冬', en: 'Winter' },
 }
 
 export function getTimeLabel(fraction: number): string {
