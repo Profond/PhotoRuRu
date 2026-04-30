@@ -19,7 +19,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [currentSeason, setCurrentSeason] = useState<SeasonConfig>(SEASONS[0]);
   const [sliderValue, setSliderValueState] = useState(0.15);
   const [timeString, setTimeString] = useState('07:00');
-  const [lang, setLangState] = useState<Lang>('ja');
+  const [lang, setLangState] = useState<Lang>('zh');
 
   const t = TRANSLATIONS[lang];
 
