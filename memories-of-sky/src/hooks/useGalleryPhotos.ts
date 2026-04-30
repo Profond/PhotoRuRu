@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { uploadPhoto, listPhotos, deletePhoto, type UploadedPhoto } from '@/lib/galleryStorage';
 import { generateLayout, type PhotoLayout } from '@/lib/autoLayout';
+import { asset } from '@/lib/utils';
 
 export interface GalleryPhoto {
   id: string;
@@ -11,10 +12,10 @@ export interface GalleryPhoto {
 }
 
 const BUILTIN_PHOTOS = [
-  { id: 'spring', image: '/images/spring-sakura.jpg', name: 'spring' },
-  { id: 'summer', image: '/images/summer-clouds.jpg', name: 'summer' },
-  { id: 'autumn', image: '/images/autumn-railway.jpg', name: 'autumn' },
-  { id: 'winter', image: '/images/winter-snow.jpg', name: 'winter' },
+  { id: 'spring', image: asset('/images/spring-sakura.jpg'), name: 'spring' },
+  { id: 'summer', image: asset('/images/summer-clouds.jpg'), name: 'summer' },
+  { id: 'autumn', image: asset('/images/autumn-railway.jpg'), name: 'autumn' },
+  { id: 'winter', image: asset('/images/winter-snow.jpg'), name: 'winter' },
 ];
 
 function buildPhotos(uploadedList: UploadedPhoto[]): GalleryPhoto[] {

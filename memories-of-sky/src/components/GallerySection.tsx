@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { useApp } from '@/contexts/AppContext'
+import { asset } from '@/lib/utils'
 
 gsap.registerPlugin(ScrollTrigger)
 
@@ -20,7 +21,7 @@ function getItems(t: ReturnType<typeof useApp>['t']): (GalleryItem & { label: st
     {
       jpKey: 'springBreeze',
       label: t.springBreeze,
-      image: '/images/spring-breeze.jpg',
+      image: asset('/images/spring-breeze.jpg'),
       width: '280px',
       rotate: '-4deg',
       marginTop: '0px',
@@ -30,7 +31,7 @@ function getItems(t: ReturnType<typeof useApp>['t']): (GalleryItem & { label: st
     {
       jpKey: 'summerHeat',
       label: t.summerHeat,
-      image: '/images/summer-heat.jpg',
+      image: asset('/images/summer-heat.jpg'),
       width: '340px',
       rotate: '3deg',
       marginTop: '40px',
@@ -40,7 +41,7 @@ function getItems(t: ReturnType<typeof useApp>['t']): (GalleryItem & { label: st
     {
       jpKey: 'autumnFarewell',
       label: t.autumnFarewell,
-      image: '/images/autumn-farewell.jpg',
+      image: asset('/images/autumn-farewell.jpg'),
       width: '280px',
       rotate: '-2deg',
       marginTop: '-20px',
@@ -50,7 +51,7 @@ function getItems(t: ReturnType<typeof useApp>['t']): (GalleryItem & { label: st
     {
       jpKey: 'winterSilence',
       label: t.winterSilence,
-      image: '/images/winter-silence.jpg',
+      image: asset('/images/winter-silence.jpg'),
       width: '220px',
       rotate: '5deg',
       marginTop: '60px',

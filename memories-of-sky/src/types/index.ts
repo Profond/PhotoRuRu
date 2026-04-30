@@ -1,5 +1,9 @@
 export type Season = 'spring' | 'summer' | 'autumn' | 'winter';
 
+function asset(path: string): string {
+  return (import.meta.env.BASE_URL + path).replace(/\/+/g, '/');
+}
+
 export interface SeasonConfig {
   id: Season;
   kanji: string;
@@ -17,10 +21,10 @@ export interface TimeFilter {
 }
 
 export const SEASONS: SeasonConfig[] = [
-  { id: 'spring', kanji: '春', name: 'Spring', color: '#FAD0C4', glassBg: 'rgba(250, 208, 196, 0.12)', video: '/videos/spring-sky.mp4' },
-  { id: 'summer', kanji: '夏', name: 'Summer', color: '#FFD700', glassBg: 'rgba(46, 92, 138, 0.15)', video: '/videos/summer-sky.mp4' },
-  { id: 'autumn', kanji: '秋', name: 'Autumn', color: '#D35400', glassBg: 'rgba(211, 84, 0, 0.12)', video: '/videos/autumn-sky.mp4' },
-  { id: 'winter', kanji: '冬', name: 'Winter', color: '#BDC3C7', glassBg: 'rgba(189, 195, 199, 0.12)', video: '/videos/winter-sky.mp4' },
+  { id: 'spring', kanji: '春', name: 'Spring', color: '#FAD0C4', glassBg: 'rgba(250, 208, 196, 0.12)', video: asset('/videos/spring-sky.mp4') },
+  { id: 'summer', kanji: '夏', name: 'Summer', color: '#FFD700', glassBg: 'rgba(46, 92, 138, 0.15)', video: asset('/videos/summer-sky.mp4') },
+  { id: 'autumn', kanji: '秋', name: 'Autumn', color: '#D35400', glassBg: 'rgba(211, 84, 0, 0.12)', video: asset('/videos/autumn-sky.mp4') },
+  { id: 'winter', kanji: '冬', name: 'Winter', color: '#BDC3C7', glassBg: 'rgba(189, 195, 199, 0.12)', video: asset('/videos/winter-sky.mp4') },
 ];
 
 export const SLIDER_MIN = 4;

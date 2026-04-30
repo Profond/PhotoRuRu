@@ -1,9 +1,9 @@
+import { asset } from '@/lib/utils';
+
 export interface UploadedPhoto {
   filename: string;
   src: string;
 }
-
-const BASE = '/images/uploaded/';
 
 export async function uploadPhoto(file: File): Promise<string> {
   const form = new FormData();
@@ -15,10 +15,14 @@ export async function uploadPhoto(file: File): Promise<string> {
 }
 
 export async function listPhotos(): Promise<UploadedPhoto[]> {
-  const res = await fetch('/api/photos');
-  if (!res.ok) return [];
-  const filenames: string[] = await res.json();
-  return filenames.map(f => ({ filename: f, src: BASE + f }));
+  try {
+    const res = await fetch(asset('/images/uploaded/_manifest.json'));
+    if (!res.ok) return [];
+    const filenames: string[] = await res.json();
+    return filenames.map(f => ({ filename: f, src: asset('/images/uploaded/' + f) }));
+  } catch {
+    return [];
+  }
 }
 
 export async function deletePhoto(filename: string): Promise<void> {

@@ -1,12 +1,13 @@
 import { useEffect, useRef, useState } from 'react'
 import { useApp } from '@/contexts/AppContext'
 import { useSkyFilter } from '@/hooks/useSkyFilter'
+import { asset } from '@/lib/utils'
 
 const VIDEO_MAP: Record<string, string> = {
-  spring: '/videos/spring.mp4',
-  summer: '/videos/summer.mp4',
-  autumn: '/videos/autumn.mp4',
-  winter: '/videos/winter.mp4',
+  spring: asset('/videos/spring.mp4'),
+  summer: asset('/videos/summer.mp4'),
+  autumn: asset('/videos/autumn.mp4'),
+  winter: asset('/videos/winter.mp4'),
 }
 
 export default function VideoBackground() {
