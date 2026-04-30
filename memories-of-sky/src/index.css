@@ -129,3 +129,7 @@
     background: radial-gradient(circle, transparent 50%, rgba(0, 0, 0, 0.4) 100%);
   }
 }
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
