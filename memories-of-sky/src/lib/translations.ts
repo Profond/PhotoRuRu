@@ -91,7 +91,7 @@ export const translations: Record<Lang, Translations> = {
     aboutText1En: 'Photographing the sky is capturing the beauty of time. The gentleness of dawn, the melancholy of dusk, the silence of the night sky — every moment holds a story.',
     aboutText2: '十五年間、日本の四季を追い続けている。春の桜、夏の入道雲、秋の夕焼け、冬の雪景色——季節が移ろうたびに、空は新しい表情を見せる。',
     aboutText2En: 'For fifteen years, I have been chasing the four seasons of Japan. Cherry blossoms in spring, towering cumulus clouds in summer, sunsets in autumn, snowy landscapes in winter — the sky reveals new expressions with each passing season.',
-    aboutLocation: 'Tokyo, 2024',
+    aboutLocation: 'FuJian, 2026',
 
     galleryTitle: '作品集',
     galleryTitleEn: 'Selected Works',
@@ -189,7 +189,7 @@ export const translations: Record<Lang, Translations> = {
     aboutText1En: 'Photographing the sky is capturing the beauty of time. The gentleness of dawn, the melancholy of dusk, the silence of the night sky — every moment holds a story.',
     aboutText2: '十五年来，我一直追逐着日本的四季。春日的樱花、夏日的积雨云、秋天的晚霞、冬日的雪景——随着季节更替，天空展现出全新的面貌。',
     aboutText2En: 'For fifteen years, I have been chasing the four seasons of Japan. Cherry blossoms in spring, towering cumulus clouds in summer, sunsets in autumn, snowy landscapes in winter — the sky reveals new expressions with each passing season.',
-    aboutLocation: '东京, 2024',
+    aboutLocation: '福建, 2026',
 
     galleryTitle: '作品集',
     galleryTitleEn: 'Selected Works',
@@ -287,7 +287,7 @@ export const translations: Record<Lang, Translations> = {
     aboutText1En: '',
     aboutText2: 'For fifteen years, I have been chasing the four seasons of Japan. Cherry blossoms in spring, towering cumulus clouds in summer, sunsets in autumn, snowy landscapes in winter — the sky reveals new expressions with each passing season.',
     aboutText2En: '',
-    aboutLocation: 'Tokyo, 2024',
+    aboutLocation: 'FuJian, 2026',
 
     galleryTitle: 'Selected Works',
     galleryTitleEn: '',

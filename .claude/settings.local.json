@@ -21,7 +21,10 @@
       "Bash(git config *)",
       "Bash(curl -s --connect-timeout 5 https://github.com)",
       "Bash(awk '{print $2}')",
-      "Bash(git push *)"
+      "Bash(git push *)",
+      "Bash(curl *)",
+      "Bash(npm list *)",
+      "Bash(npx vite *)"
     ]
   }
 }

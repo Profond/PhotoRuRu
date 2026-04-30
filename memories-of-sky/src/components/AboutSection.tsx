@@ -146,7 +146,7 @@ export default function AboutSection() {
           {/* Camera info */}
           <div className="mt-8 pt-6 border-t border-white/10">
             <p className="font-mono-label text-[12px] text-white/30">
-              Canon EOS R5 / RF 24-70mm f/2.8 / Film: Kodak Portra 400
+               iPhone 15 Pro Max 、Osmo Pocket 4
             </p>
           </div>
         </div>

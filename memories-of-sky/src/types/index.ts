@@ -83,6 +83,10 @@ export interface TranslationData {
   wp1: string; wp2: string; wp3: string; wp4: string;
   footerQuote: string;
   copyright: string;
+  addPhoto: string;
+  deletePhotoConfirm: string;
+  cancel: string;
+  delete: string;
   // Season names localized
   springName: string;
   summerName: string;
@@ -97,9 +101,9 @@ export const TRANSLATIONS: Record<Lang, TranslationData> = {
     heroSubtitle: '一场穿越四季的旅程，一次与天空的相遇。',
     scroll: '向下滚动',
     aboutTitle: '关于摄影师',
-    aboutP1: '每次仰望天空，内心都会轻轻震颤。随着四季流转而变化的天空色彩，定格那一个个瞬间是我的热情所在。以东京为据点，不分国内外，持续追寻天空之美。',
-    polaroidLabel: '东京，2024',
-    cameraInfo: 'Canon EOS R5 / RF 24-70mm f/2.8 / Film: Kodak Portra 400',
+    aboutP1: '每次仰望天空，内心都会轻轻震颤。随着四季流转而变化的天空色彩，定格那一个个瞬间是我的热情所在。以厦门为据点，不分国内外，持续追寻天空之美。',
+    polaroidLabel: '福建，2026',
+    cameraInfo: ' iPhone 15 Pro Max 、Osmo Pocket 4',
     galleryTitle: '作品集',
     springPhoto: '春风', summerPhoto: '夏之阳', autumnPhoto: '秋之别', winterPhoto: '冬之寂',
     seasonsTitle: '四季物语',
@@ -110,6 +114,10 @@ export const TRANSLATIONS: Record<Lang, TranslationData> = {
     wp1: '雪花纷飞的夜晚，', wp2: '世界被白色寂静包裹。', wp3: '只有一个心愿，', wp4: '悄悄寄托给星辰。',
     footerQuote: '「天空始终在那里，守护着我们」',
     copyright: '2024 天空记忆. 保留所有权利.',
+    addPhoto: '添加照片',
+    deletePhotoConfirm: '确定删除这张照片吗？',
+    cancel: '取消',
+    delete: '删除',
     springName: '春', summerName: '夏', autumnName: '秋', winterName: '冬',
   },
 
@@ -120,8 +128,8 @@ export const TRANSLATIONS: Record<Lang, TranslationData> = {
     scroll: 'SCROLL',
     aboutTitle: 'しゃしんかについて',
     aboutP1: 'そらをみあげるたびに、こころがしずかにゆれる。しきのうつろいとともにかわるそらのいろ、そのいっしゅんいっしゅんをきりとることがわたしのじょうねつです。とうきょうをきょてんに、こくないがいをとわずそらのうつくしさをおいつづけています。',
-    polaroidLabel: 'Tokyo, 2024',
-    cameraInfo: 'Canon EOS R5 / RF 24-70mm f/2.8 / Film: Kodak Portra 400',
+    polaroidLabel: 'FuJian, 2026',
+    cameraInfo: ' iPhone 15 Pro Max 、Osmo Pocket 4',
     galleryTitle: 'さくひんしゅう',
     springPhoto: 'はるかぜ', summerPhoto: 'なつのようき', autumnPhoto: 'あきのわかれ', winterPhoto: 'ふゆのせいじゃく',
     seasonsTitle: 'しきのものがたり',
@@ -132,6 +140,10 @@ export const TRANSLATIONS: Record<Lang, TranslationData> = {
     wp1: 'ゆきがふりつもるよる、', wp2: 'せかいはしろいしずけさにつつまれる。', wp3: 'ねがいごとをひとつだけ、', wp4: 'ほしにそっとたくして。',
     footerQuote: '「そらはいつもそこにあって、わたしたちをみまもっている」',
     copyright: '2024 そらのきおく. All rights reserved.',
+    addPhoto: '写真を追加',
+    deletePhotoConfirm: 'この写真を削除しますか？',
+    cancel: 'キャンセル',
+    delete: '削除',
     springName: 'はる', summerName: 'なつ', autumnName: 'あき', winterName: 'ふゆ',
   },
 
@@ -142,8 +154,8 @@ export const TRANSLATIONS: Record<Lang, TranslationData> = {
     scroll: 'SCROLL',
     aboutTitle: 'About the Photographer',
     aboutP1: 'Every time I look up at the sky, my heart trembles softly. The colors of the sky changing with the passing seasons — capturing each fleeting moment is my passion. Based in Tokyo, I continue to pursue the beauty of skies across the world.',
-    polaroidLabel: 'Tokyo, 2024',
-    cameraInfo: 'Canon EOS R5 / RF 24-70mm f/2.8 / Film: Kodak Portra 400',
+    polaroidLabel: 'FuJian, 2026',
+    cameraInfo: ' iPhone 15 Pro Max 、Osmo Pocket 4',
     galleryTitle: 'Selected Works',
     springPhoto: 'Spring Breeze', summerPhoto: 'Summer Heat', autumnPhoto: 'Autumn Farewell', winterPhoto: 'Winter Silence',
     seasonsTitle: 'Tales of the Four Seasons',
@@ -154,6 +166,10 @@ export const TRANSLATIONS: Record<Lang, TranslationData> = {
     wp1: 'On a night when snow falls and piles,', wp2: 'The world is wrapped in white silence.', wp3: 'Just one wish,', wp4: 'Gently entrusted to the stars.',
     footerQuote: '"The sky is always there, watching over us."',
     copyright: '2024 Memories of Sky. All rights reserved.',
+    addPhoto: 'Add Photo',
+    deletePhotoConfirm: 'Delete this photo?',
+    cancel: 'Cancel',
+    delete: 'Delete',
     springName: 'Spring', summerName: 'Summer', autumnName: 'Autumn', winterName: 'Winter',
   },
 };

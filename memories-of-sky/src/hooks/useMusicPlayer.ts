@@ -14,6 +14,7 @@ interface MusicState {
 export function useMusicPlayer() {
   const apRef = useRef<APlayer | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
+  const cleanupInteractionRef = useRef<(() => void) | null>(null);
   const [state, setState] = useState<MusicState>({
     playing: false,
     muted: false,
@@ -73,10 +74,43 @@ export function useMusicPlayer() {
             ap.play();
           }
         });
+
+        // Attempt autoplay; browsers may block it without user gesture,
+        // so also register a one-shot interaction listener as fallback.
+        if (musicConfig.autoplay) {
+          const tryPlay = () => {
+            if (apRef.current && !apRef.current.audio.paused) return;
+            apRef.current?.play();
+          };
+
+          // Try immediate play first
+          tryPlay();
+
+          // If still paused after a tick, wait for user interaction
+          setTimeout(() => {
+            if (apRef.current && apRef.current.audio.paused) {
+              const onInteraction = () => {
+                tryPlay();
+                cleanupInteractionRef.current?.();
+                cleanupInteractionRef.current = null;
+              };
+              document.addEventListener('click', onInteraction, { once: true });
+              document.addEventListener('keydown', onInteraction, { once: true });
+              document.addEventListener('touchstart', onInteraction, { once: true });
+              cleanupInteractionRef.current = () => {
+                document.removeEventListener('click', onInteraction);
+                document.removeEventListener('keydown', onInteraction);
+                document.removeEventListener('touchstart', onInteraction);
+              };
+            }
+          }, 500);
+        }
       })
       .catch(() => { /* silently fail if API unreachable */ });
 
     return () => {
+      cleanupInteractionRef.current?.();
+      cleanupInteractionRef.current = null;
       apRef.current?.destroy();
       container.remove();
     };
