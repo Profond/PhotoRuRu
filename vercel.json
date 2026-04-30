@@ -1,0 +1,9 @@
+{
+  "buildCommand": "cd memories-of-sky && npm install && npm run build",
+  "outputDirectory": "memories-of-sky/dist",
+  "framework": null,
+  "rewrites": [
+    { "source": "/api/(.*)", "destination": "/api/$1" },
+    { "source": "/((?!api/).*)", "destination": "/index.html" }
+  ]
+}

@@ -30,8 +30,8 @@ function buildPhotos(uploadedList: UploadedPhoto[]): GalleryPhoto[] {
   }));
 
   const uploaded: GalleryPhoto[] = uploadedList.map((p, i) => ({
-    id: p.filename,
-    src: p.src,
+    id: p.url,
+    src: p.url,
     name: p.filename,
     isUploaded: true,
     layout: layouts[BUILTIN_PHOTOS.length + i],

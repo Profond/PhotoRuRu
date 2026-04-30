@@ -1,34 +1,36 @@
-import { asset } from '@/lib/utils';
+import { upload } from '@vercel/blob/client';
 
 export interface UploadedPhoto {
+  url: string;
   filename: string;
-  src: string;
 }
 
 export async function uploadPhoto(file: File): Promise<string> {
-  const form = new FormData();
-  form.append('file', file);
-  const res = await fetch('/api/upload-photo', { method: 'POST', body: form });
-  if (!res.ok) throw new Error('Upload failed');
-  const data = await res.json();
-  return data.filename as string;
+  const blob = await upload(file.name, file, {
+    access: 'public',
+    handleUploadUrl: '/api/upload',
+  });
+  return blob.url;
 }
 
 export async function listPhotos(): Promise<UploadedPhoto[]> {
   try {
-    const res = await fetch(asset('/images/uploaded/_manifest.json'));
+    const res = await fetch('/api/list');
     if (!res.ok) return [];
-    const filenames: string[] = await res.json();
-    return filenames.map(f => ({ filename: f, src: asset('/images/uploaded/' + f) }));
+    const urls: string[] = await res.json();
+    return urls.map(url => ({
+      url,
+      filename: url.split('/').pop() || 'photo',
+    }));
   } catch {
     return [];
   }
 }
 
-export async function deletePhoto(filename: string): Promise<void> {
-  await fetch('/api/photos', {
-    method: 'DELETE',
+export async function deletePhoto(url: string): Promise<void> {
+  await fetch('/api/delete', {
+    method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ filename }),
+    body: JSON.stringify({ url }),
   });
 }
