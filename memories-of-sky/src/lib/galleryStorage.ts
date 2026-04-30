@@ -6,7 +6,7 @@ export interface UploadedPhoto {
 }
 
 export async function uploadPhoto(file: File): Promise<string> {
-  const blob = await upload(file.name, file, {
+  const blob = await upload('gallery/' + file.name, file, {
     access: 'public',
     handleUploadUrl: '/api/upload',
   });
@@ -20,7 +20,7 @@ export async function listPhotos(): Promise<UploadedPhoto[]> {
     const urls: string[] = await res.json();
     return urls.map(url => ({
       url,
-      filename: url.split('/').pop() || 'photo',
+      filename: decodeURIComponent(url.split('/').pop()?.split('?')[0] || 'photo'),
     }));
   } catch {
     return [];

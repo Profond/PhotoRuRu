@@ -19,26 +19,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         };
       },
       onUploadCompleted: async ({ blob }) => {
-        const { put, list } = await import('@vercel/blob');
-        const metaKey = 'gallery-manifest.json';
-
-        let filenames: string[] = [];
-        try {
-          const { blobs } = await list({ prefix: metaKey });
-          if (blobs.length > 0) {
-            const manifestRes = await fetch(blobs[0].url);
-            if (manifestRes.ok) {
-              const data = await manifestRes.json();
-              filenames = data.filenames || [];
-            }
-          }
-        } catch {}
-
-        filenames.push(blob.url);
-        await put(metaKey, JSON.stringify({ filenames }), {
-          access: 'public',
-          contentType: 'application/json',
-        });
+        console.log('Upload completed:', blob.url);
       },
     });
 
