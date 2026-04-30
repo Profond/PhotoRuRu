@@ -60,8 +60,8 @@ export function useMusicPlayer() {
 
         ap.on('play', () => setState((s) => ({ ...s, playing: true })));
         ap.on('pause', () => setState((s) => ({ ...s, playing: false })));
-        ap.on('listswitch', () => {
-          const cur = ap.list.audios[ap.list.index];
+        ap.on('listswitch', (info: { index: number }) => {
+          const cur = ap.list.audios[info.index];
           if (cur) {
             setState((s) => ({ ...s, currentTitle: cur.name, currentArtist: cur.artist }));
           }

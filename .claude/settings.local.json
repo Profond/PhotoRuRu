@@ -17,7 +17,11 @@
       "Bash(grep -oP '\\(lang|locale|i18n|language|中文|English|日本語|zh|en|ja|切换|switch\\)[^,;}{\"]*')",
       "Bash(grep -oP '.{0,100}setLang.{0,100}')",
       "Bash(grep -oP '.{0,200}lang.{0,200}')",
-      "Bash(npm search *)"
+      "Bash(npm search *)",
+      "Bash(git config *)",
+      "Bash(curl -s --connect-timeout 5 https://github.com)",
+      "Bash(awk '{print $2}')",
+      "Bash(git push *)"
     ]
   }
 }
