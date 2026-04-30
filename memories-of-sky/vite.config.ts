@@ -146,7 +146,7 @@ function parseMultipart(body: Buffer, boundary: string): Part[] {
 }
 
 // https://vite.dev/config/
-export default defineConfig(({ command }) => ({
+export default defineConfig({
   base: '/',
   plugins: [inspectAttr(), react(), galleryApiPlugin()],
   server: {
@@ -157,4 +157,4 @@ export default defineConfig(({ command }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
-}))
+})
