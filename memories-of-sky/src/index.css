@@ -1,0 +1,131 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 0%;
+    --foreground: 0 0% 100%;
+    --card: 0 0% 0%;
+    --card-foreground: 0 0% 100%;
+    --popover: 0 0% 0%;
+    --popover-foreground: 0 0% 100%;
+    --primary: 0 0% 100%;
+    --primary-foreground: 0 0% 0%;
+    --secondary: 0 0% 10%;
+    --secondary-foreground: 0 0% 100%;
+    --muted: 0 0% 10%;
+    --muted-foreground: 0 0% 60%;
+    --accent: 0 0% 10%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 0 0% 20%;
+    --input: 0 0% 20%;
+    --ring: 0 0% 100%;
+    --radius: 0.625rem;
+
+    --spring-color: #FAD0C4;
+    --summer-color: #FFD700;
+    --autumn-color: #D35400;
+    --winter-color: #BDC3C7;
+  }
+
+  body {
+    @apply bg-black text-white;
+    font-family: 'Noto Sans JP', 'Inter', sans-serif;
+    font-weight: 300;
+    overflow-x: hidden;
+  }
+
+  ::selection {
+    background: rgba(250, 208, 196, 0.4);
+  }
+}
+
+@layer components {
+  .font-display {
+    font-family: 'Noto Serif JP', 'EB Garamond', serif;
+    font-weight: 200;
+  }
+
+  .font-display-en {
+    font-family: 'EB Garamond', 'Noto Serif JP', serif;
+    font-weight: 400;
+  }
+
+  .font-body {
+    font-family: 'Noto Sans JP', 'Inter', sans-serif;
+    font-weight: 300;
+  }
+
+  .font-mono-label {
+    font-family: 'Space Mono', monospace;
+    font-weight: 400;
+  }
+
+  .glass-panel {
+    backdrop-filter: blur(20px) saturate(1.2);
+    -webkit-backdrop-filter: blur(20px) saturate(1.2);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 16px;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  }
+
+  .glass-panel:hover {
+    border-color: rgba(255, 255, 255, 0.35);
+  }
+
+  .glass-panel-spring {
+    background: rgba(250, 208, 196, 0.12);
+  }
+
+  .glass-panel-spring:hover {
+    box-shadow: 0 0 40px rgba(250, 208, 196, 0.08);
+  }
+
+  .glass-panel-summer {
+    background: rgba(46, 92, 138, 0.15);
+  }
+
+  .glass-panel-summer:hover {
+    box-shadow: 0 0 40px rgba(255, 215, 0, 0.08);
+  }
+
+  .glass-panel-autumn {
+    background: rgba(211, 84, 0, 0.12);
+  }
+
+  .glass-panel-autumn:hover {
+    box-shadow: 0 0 40px rgba(211, 84, 0, 0.08);
+  }
+
+  .glass-panel-winter {
+    background: rgba(189, 195, 199, 0.12);
+  }
+
+  .glass-panel-winter:hover {
+    box-shadow: 0 0 40px rgba(189, 195, 199, 0.08);
+  }
+
+  .polaroid {
+    background: #ffffff;
+    padding: 12px 12px 48px 12px;
+    border-radius: 4px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94), box-shadow 0.4s ease;
+  }
+
+  .polaroid:hover {
+    transform: scale(1.05) rotate(0deg) !important;
+    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.4);
+  }
+
+  .vignette-overlay {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 1;
+    background: radial-gradient(circle, transparent 50%, rgba(0, 0, 0, 0.4) 100%);
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(code --version)",
+      "Bash(npx --yes create-vite@latest . --template react-ts)",
+      "Bash(npm create *)",
+      "Bash(npm install *)",
+      "Bash(npm uninstall *)",
+      "Bash(npx tailwindcss *)",
+      "Bash(npx tsc *)",
+      "Bash(npm run *)",
+      "Bash(curl -s http://localhost:5173)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:5173)",
+      "WebFetch(domain:rdjsetbozxy5o.ok.kimi.link)",
+      "Bash(curl -sL \"https://rdjsetbozxy5o.ok.kimi.link/?id=2045913941382815744&share_id=19daa1c1-4b72-8d9e-8000-0000590f381e\")",
+      "Bash(curl -sL \"https://rdjsetbozxy5o.ok.kimi.link/assets/index-AeDAHoeg.js\")",
+      "Bash(grep -oP '\\(lang|locale|i18n|language|中文|English|日本語|zh|en|ja|切换|switch\\)[^,;}{\"]*')",
+      "Bash(grep -oP '.{0,100}setLang.{0,100}')",
+      "Bash(grep -oP '.{0,200}lang.{0,200}')",
+      "Bash(npm search *)"
+    ]
+  }
+}
