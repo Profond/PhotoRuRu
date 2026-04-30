@@ -7,25 +7,30 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    const body = await handleUpload({
+    const jsonResponse = await handleUpload({
       request: req,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      body: req.body as any,
       token: process.env.BLOB_READ_WRITE_TOKEN,
-      onBeforeGenerateToken: async (pathname) => {
+      onBeforeGenerateToken: async (_pathname, _clientPayload, _multipart) => {
         return {
           allowedContentTypes: ['image/jpeg', 'image/png', 'image/webp', 'image/gif'],
           addRandomSuffix: true,
         };
       },
       onUploadCompleted: async ({ blob }) => {
-        const { put } = await import('@vercel/blob');
+        const { put, list } = await import('@vercel/blob');
         const metaKey = 'gallery-manifest.json';
 
         let filenames: string[] = [];
         try {
-          const existing = await fetch(`${process.env.BLOB_STORE_URL || ''}/${metaKey}`);
-          if (existing.ok) {
-            const data = await existing.json();
-            filenames = data.filenames || [];
+          const { blobs } = await list({ prefix: metaKey });
+          if (blobs.length > 0) {
+            const manifestRes = await fetch(blobs[0].url);
+            if (manifestRes.ok) {
+              const data = await manifestRes.json();
+              filenames = data.filenames || [];
+            }
           }
         } catch {}
 
@@ -37,12 +42,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       },
     });
 
-    return res.status(200).json(body);
+    return res.status(200).json(jsonResponse);
   } catch (error) {
     return res.status(400).json({ error: String(error) });
   }
 }
 
 export const config = {
-  api: { bodyParser: false },
+  api: { bodyParser: true, sizeLimit: '4mb' },
 };
