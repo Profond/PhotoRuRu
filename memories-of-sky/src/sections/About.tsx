@@ -53,7 +53,7 @@ export default function About() {
           <div ref={polaroidRef} className="polaroid opacity-0" style={{ transform: 'rotate(-3deg)' }}>
             <div className="overflow-hidden" style={{ width: '280px', height: '350px' }}>
               <img
-                src={asset("/images/photographer-portrait.png")}
+                src={asset("/images/photographer-portrait.jpg")}
                 alt="Portrait"
                 className="w-full h-full object-cover"
                 loading="lazy"
