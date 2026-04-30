@@ -83,6 +83,7 @@ export default function Gallery() {
     }, sectionRef);
 
     return () => ctx.revert();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [photos.length]);
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {

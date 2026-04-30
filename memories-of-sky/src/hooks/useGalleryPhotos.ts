@@ -18,7 +18,6 @@ const BUILTIN_PHOTOS = [
 ];
 
 export function useGalleryPhotos() {
-  const [uploaded, setUploaded] = useState<StoredPhoto[]>([]);
   const [photos, setPhotos] = useState<GalleryPhoto[]>([]);
   const urlMapRef = useRef<Map<string, string>>(new Map());
 
@@ -59,7 +58,6 @@ export function useGalleryPhotos() {
     let cancelled = false;
     getAllPhotos().then((stored) => {
       if (!cancelled) {
-        setUploaded(stored);
         buildPhotos(stored);
       }
     });
@@ -79,7 +77,6 @@ export function useGalleryPhotos() {
     if (newStored.length === 0) return;
 
     const all = await getAllPhotos();
-    setUploaded(all);
     buildPhotos(all);
   }, [buildPhotos]);
 
@@ -91,7 +88,6 @@ export function useGalleryPhotos() {
     }
     await deletePhoto(id);
     const all = await getAllPhotos();
-    setUploaded(all);
     buildPhotos(all);
   }, [buildPhotos]);
 
