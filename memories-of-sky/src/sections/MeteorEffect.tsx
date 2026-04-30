@@ -64,7 +64,7 @@ export default function MeteorEffect({ active, onDone }: MeteorEffectProps) {
         raf = requestAnimationFrame(animate);
       } else {
         // Fade out canvas after flight
-        let fadeStart = performance.now();
+        const fadeStart = performance.now();
         function fade(now: number) {
           if (!ctx || !canvas) return;
           const t = Math.min(1, (now - fadeStart) / 500);

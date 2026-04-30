@@ -17,7 +17,7 @@ const btnStyle: React.CSSProperties = {
 };
 
 export default function MusicPlayer() {
-  const { playing, muted, volume, currentTitle, currentArtist, toggle, next, prev, setVolume, toggleMute, enabled } =
+  const { playing, muted, volume, currentTitle, currentArtist, toggle, next, prev, toggleMute, enabled } =
     useMusicPlayer();
 
   if (!enabled) return null;

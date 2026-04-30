@@ -134,6 +134,7 @@ export default function TimeSlider() {
             height: '2px',
             background: 'linear-gradient(90deg, rgba(255,255,255,0.4), rgba(255,255,255,0.8))',
             borderRadius: '1px',
+            // eslint-disable-next-line react-hooks/refs
             transition: isDragging.current ? 'none' : 'width 0.05s linear',
           }}
         />
@@ -143,6 +144,7 @@ export default function TimeSlider() {
           className="absolute top-1/2 -translate-y-1/2 pointer-events-none"
           style={{
             left: `${pct}%`,
+            // eslint-disable-next-line react-hooks/refs
             transform: `translate(-50%, -50%) scale(${isDragging.current ? 1.15 : 1})`,
             transition: 'transform 0.15s ease-out, left 0.05s linear',
           }}
@@ -153,6 +155,7 @@ export default function TimeSlider() {
               width: '16px',
               height: '16px',
               background: '#ffffff',
+              // eslint-disable-next-line react-hooks/refs
               boxShadow: isDragging.current
                 ? '0 0 20px rgba(255,255,255,0.5), 0 0 40px rgba(255,255,255,0.2)'
                 : '0 0 8px rgba(255,255,255,0.3)',
