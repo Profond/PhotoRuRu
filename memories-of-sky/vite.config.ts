@@ -147,7 +147,7 @@ function parseMultipart(body: Buffer, boundary: string): Part[] {
 
 // https://vite.dev/config/
 export default defineConfig(({ command }) => ({
-  base: command === 'serve' ? '/' : '/PhotoRuRu/',
+  base: '/',
   plugins: [inspectAttr(), react(), galleryApiPlugin()],
   server: {
     port: 3000,
