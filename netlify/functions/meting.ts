@@ -1,93 +1,79 @@
 import type { Config } from "@netlify/functions";
 
-/**
- * Meting API proxy — forwards to self-hosted NeteaseCloudMusicApi on Tencent SCF.
- * Returns APlayer-compatible audio list: [{ name, artist, url, cover, lrc }]
- */
+const SCF = "https://1306193308-goczfijoz5.ap-guangzhou.tencentscf.com";
 
-const API_BASE = "https://1306193308-goczfijoz5.ap-guangzhou.tencentscf.com";
+async function getJson(url: string) {
+  const r = await fetch(url);
+  return r.json();
+}
 
 export default async (req: Request) => {
-  const url = new URL(req.url);
-  const server = url.searchParams.get("server") || "netease";
-  const type = url.searchParams.get("type") || "playlist";
-  const id = url.searchParams.get("id");
-
-  if (!id) {
-    return Response.json({ error: "Missing id" }, { status: 400 });
-  }
-
-  if (server !== "netease") {
-    return Response.json({ error: `Unsupported server: ${server}` }, { status: 400 });
-  }
+  const u = new URL(req.url);
+  const type = u.searchParams.get("type") || "playlist";
+  const id = u.searchParams.get("id");
+  if (!id) return Response.json([], { status: 400 });
 
   try {
-    // 1. Fetch playlist tracks
-    const playlistRes = await fetch(`${API_BASE}/playlist/detail?id=${id}`);
-    const playlistData = await playlistRes.json();
-    const tracks: any[] = playlistData.playlist?.tracks ?? [];
-
+    // Step 1: get tracks
+    let tracks: any[] = [];
+    if (type === "playlist") {
+      const d: any = await getJson(`${SCF}/playlist/detail?id=${id}`);
+      tracks = d.playlist?.tracks ?? [];
+    } else if (type === "song") {
+      const d: any = await getJson(`${SCF}/song/detail?ids=${id}`);
+      tracks = d.songs ?? [];
+    }
     if (!tracks.length) return Response.json([]);
 
-    const trackIds = tracks.map((t: any) => t.id);
-
-    // 2. Fetch song URLs in batches of 10
+    // Step 2: get song URLs (batch 10)
+    const ids = tracks.map((t: any) => t.id);
     const urlMap = new Map<number, string>();
-    for (let i = 0; i < trackIds.length; i += 10) {
-      const batch = trackIds.slice(i, i + 10);
-      try {
-        const res = await fetch(
-          `${API_BASE}/song/url?id=${batch.join(",")}&br=128000`
-        );
-        const data: any = await res.json();
-        for (const u of data.data ?? []) {
-          if (u.url) {
-            let songUrl: string = u.url;
-            if (songUrl.startsWith("http://")) {
-              songUrl = "https://" + songUrl.slice(7);
-            }
-            urlMap.set(u.id, songUrl);
-          }
+
+    for (let i = 0; i < ids.length; i += 10) {
+      const batch = ids.slice(i, i + 10);
+      const d: any = await getJson(`${SCF}/song/url?id=${batch.join(",")}&br=128000`);
+      for (const item of d.data ?? []) {
+        if (item.url) {
+          let songUrl: string = item.url;
+          if (songUrl.startsWith("http://")) songUrl = "https://" + songUrl.slice(7);
+          urlMap.set(item.id, songUrl);
         }
-      } catch { /* skip failed batch */ }
-    }
-
-    // 3. Fetch lyrics (sequentially to avoid overwhelming SCF)
-    const lyricsArr: string[] = [];
-    for (const tid of trackIds) {
-      try {
-        const res = await fetch(`${API_BASE}/lyric?id=${tid}`);
-        const data: any = await res.json();
-        lyricsArr.push(data.lrc?.lyric ?? "");
-      } catch {
-        lyricsArr.push("");
       }
     }
 
-    // 4. Build result
-    const result = tracks.map((track: any, i: number) => {
-      let cover = track.al?.picUrl
-        ? track.al.picUrl + "?param=300y300"
-        : "";
-      if (cover.startsWith("http://")) {
-        cover = "https://" + cover.slice(7);
+    // Step 3: get lyrics (batch 5 to avoid timeout)
+    const lrcMap = new Map<number, string>();
+    for (let i = 0; i < ids.length; i += 5) {
+      const batch = ids.slice(i, i + 5);
+      const results = await Promise.all(
+        batch.map((tid: number) =>
+          getJson(`${SCF}/lyric?id=${tid}`)
+            .then((d: any) => ({ id: tid, lrc: d.lrc?.lyric ?? "" }))
+            .catch(() => ({ id: tid, lrc: "" }))
+        )
+      );
+      for (const r of results) {
+        lrcMap.set(r.id, r.lrc);
       }
+    }
+
+    // Step 4: build result
+    const result = tracks.map((track: any) => {
+      let cover = track.al?.picUrl ? track.al.picUrl + "?param=300y300" : "";
+      if (cover.startsWith("http://")) cover = "https://" + cover.slice(7);
       return {
         name: track.name || "Unknown",
         artist: (track.ar || []).map((a: any) => a.name).join(" / "),
         url: urlMap.get(track.id) || "",
         cover,
-        lrc: lyricsArr[i] || "",
+        lrc: lrcMap.get(track.id) || "",
       };
     });
 
     return Response.json(result);
   } catch (err) {
-    console.error("Meting proxy error:", err);
-    return Response.json(
-      { error: "Failed to fetch music data" },
-      { status: 500 }
-    );
+    console.error("Meting error:", err);
+    return Response.json([], { status: 500 });
   }
 };
 
