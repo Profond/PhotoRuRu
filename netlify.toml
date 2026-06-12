@@ -10,12 +10,6 @@
   node_bundler = "esbuild"
 
 [[redirects]]
-  from = "/api/ncm/*"
-  to = "https://1306193308-goczfijoz5.ap-guangzhou.tencentscf.com/:splat"
-  status = 200
-  force = true
-
-[[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200

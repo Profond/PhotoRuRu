@@ -11,8 +11,8 @@ interface MusicState {
   currentArtist: string;
 }
 
-// Use Netlify redirect proxy to reach SCF API (avoids browser CORS/network issues)
-const NCM_BASE = '/api/ncm';
+// Call SCF API directly (CORS is enabled on SCF)
+const NCM_BASE = 'https://1306193308-goczfijoz5.ap-guangzhou.tencentscf.com';
 
 export function useMusicPlayer() {
   const apRef = useRef<APlayer | null>(null);
