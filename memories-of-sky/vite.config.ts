@@ -22,99 +22,6 @@ function writeManifest(files: string[]) {
   fs.writeFileSync(MANIFEST, JSON.stringify(files, null, 2))
 }
 
-/** Local Meting API proxy — forwards to Tencent SCF NeteaseCloudMusicApi */
-function metingPlugin(): Plugin {
-  const SCF_BASE = "https://1306193308-goczfijoz5.ap-guangzhou.tencentscf.com";
-
-  async function fetchJson(url: string) {
-    const res = await fetch(url);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    return res.json();
-  }
-
-  return {
-    name: 'meting-api',
-    configureServer(server) {
-      server.middlewares.use('/api/meting', async (req, res) => {
-        const url = new URL(req.url!, `http://${req.headers.host}`);
-        const serverParam = url.searchParams.get("server") || "netease";
-        const type = url.searchParams.get("type") || "playlist";
-        const id = url.searchParams.get("id");
-
-        res.setHeader("Content-Type", "application/json");
-
-        if (!id) {
-          res.statusCode = 400;
-          res.end(JSON.stringify({ error: "Missing id" }));
-          return;
-        }
-
-        if (serverParam !== "netease") {
-          res.statusCode = 400;
-          res.end(JSON.stringify({ error: `Unsupported server: ${serverParam}` }));
-          return;
-        }
-
-        try {
-          let tracks: any[] = [];
-
-          if (type === "playlist") {
-            const data: any = await fetchJson(`${SCF_BASE}/playlist/detail?id=${id}`);
-            tracks = data.playlist?.tracks ?? [];
-          } else if (type === "song") {
-            const data: any = await fetchJson(`${SCF_BASE}/song/detail?ids=${id}`);
-            tracks = data.songs ?? [];
-          } else {
-            res.statusCode = 400;
-            res.end(JSON.stringify({ error: `Unsupported type: ${type}` }));
-            return;
-          }
-
-          if (!tracks.length) {
-            res.end(JSON.stringify([]));
-            return;
-          }
-
-          const trackIds = tracks.map((t: any) => String(t.id));
-
-          const [urlData, ...lyricsArr] = await Promise.all([
-            fetchJson(`${SCF_BASE}/song/url?id=${trackIds.join(",")}&br=128000`),
-            ...trackIds.map((tid: string) =>
-              fetchJson(`${SCF_BASE}/lyric?id=${tid}`).then(
-                (d: any) => d.lrc?.lyric ?? ""
-              )
-            ),
-          ]);
-
-          const urlMap = new Map(
-            ((urlData as any).data ?? []).map((u: any) => [u.id, u.url])
-          );
-
-          const result = tracks.map((track: any, i: number) => {
-            let songUrl = urlMap.get(track.id) || "";
-            if (songUrl.startsWith("http://")) songUrl = "https://" + songUrl.slice(7);
-            let cover = track.al?.picUrl ? track.al.picUrl + "?param=300y300" : "";
-            if (cover.startsWith("http://")) cover = "https://" + cover.slice(7);
-            return {
-              name: track.name || "Unknown",
-              artist: (track.ar || []).map((a: any) => a.name).join(" / "),
-              url: songUrl,
-              cover,
-              lrc: lyricsArr[i] || "",
-            };
-          });
-
-          res.end(JSON.stringify(result));
-        } catch (err) {
-          console.error("Meting proxy error:", err);
-          res.statusCode = 500;
-          res.end(JSON.stringify({ error: "Failed to fetch music data" }));
-        }
-      });
-    },
-  };
-}
-
 function galleryApiPlugin(): Plugin {
   return {
     name: 'gallery-api',
@@ -241,7 +148,7 @@ function parseMultipart(body: Buffer, boundary: string): Part[] {
 // https://vite.dev/config/
 export default defineConfig({
   base: '/',
-  plugins: [inspectAttr(), react(), metingPlugin(), galleryApiPlugin()],
+  plugins: [inspectAttr(), react(), galleryApiPlugin()],
   server: {
     port: 3000,
   },
