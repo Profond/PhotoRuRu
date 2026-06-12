@@ -22,6 +22,101 @@ function writeManifest(files: string[]) {
   fs.writeFileSync(MANIFEST, JSON.stringify(files, null, 2))
 }
 
+/** Local Meting API proxy — same logic as netlify/functions/meting.ts */
+function metingPlugin(): Plugin {
+  const API_BASE = "https://music.163.com";
+  const HEADERS = {
+    "Referer": "https://music.163.com",
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+  };
+
+  async function fetchJson<T>(url: string): Promise<T> {
+    const res = await fetch(url, { headers: HEADERS });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return res.json() as Promise<T>;
+  }
+
+  return {
+    name: 'meting-api',
+    configureServer(server) {
+      server.middlewares.use('/api/meting', async (req, res) => {
+        const url = new URL(req.url!, `http://${req.headers.host}`);
+        const serverParam = url.searchParams.get("server") || "netease";
+        const type = url.searchParams.get("type") || "playlist";
+        const id = url.searchParams.get("id");
+
+        res.setHeader("Content-Type", "application/json");
+
+        if (!id) {
+          res.statusCode = 400;
+          res.end(JSON.stringify({ error: "Missing id" }));
+          return;
+        }
+
+        if (serverParam !== "netease") {
+          res.statusCode = 400;
+          res.end(JSON.stringify({ error: `Unsupported server: ${serverParam}` }));
+          return;
+        }
+
+        try {
+          let tracks: any[] = [];
+
+          if (type === "playlist") {
+            const data = await fetchJson<{ result: { tracks: any[] } }>(
+              `${API_BASE}/api/playlist/detail?id=${id}`
+            );
+            tracks = data.result?.tracks ?? [];
+          } else if (type === "song") {
+            const data = await fetchJson<{ songs: any[] }>(
+              `${API_BASE}/api/song/detail?ids=[${id}]`
+            );
+            tracks = data.songs ?? [];
+          } else {
+            res.statusCode = 400;
+            res.end(JSON.stringify({ error: `Unsupported type: ${type}` }));
+            return;
+          }
+
+          if (!tracks.length) {
+            res.end(JSON.stringify([]));
+            return;
+          }
+
+          const trackIds = tracks.map((t: any) => String(t.id));
+
+          const [urlResults, ...lyricsArr] = await Promise.all([
+            fetchJson<{ data: Array<{ id: number; url: string }> }>(
+              `${API_BASE}/api/song/enhance/player/url?ids=[${trackIds.join(",")}]&br=320000`
+            ).then((d) => d.data ?? []),
+            ...trackIds.map((tid) =>
+              fetchJson<{ lrc?: { lyric: string } }>(
+                `${API_BASE}/api/song/lyric?id=${tid}&lv=1`
+              ).then((d) => d.lrc?.lyric ?? "")
+            ),
+          ]);
+
+          const urlMap = new Map(urlResults.map((u) => [u.id, u.url]));
+
+          const result = tracks.map((track: any, i: number) => ({
+            name: track.name || "Unknown",
+            artist: (track.artists || track.ar || []).map((a: any) => a.name).join(" / "),
+            url: urlMap.get(track.id) || "",
+            cover: (track.album?.picUrl || track.al?.picUrl || "") + "?param=300y300",
+            lrc: lyricsArr[i] || "",
+          }));
+
+          res.end(JSON.stringify(result));
+        } catch (err) {
+          console.error("Meting proxy error:", err);
+          res.statusCode = 500;
+          res.end(JSON.stringify({ error: "Failed to fetch music data" }));
+        }
+      });
+    },
+  };
+}
+
 function galleryApiPlugin(): Plugin {
   return {
     name: 'gallery-api',
@@ -148,7 +243,7 @@ function parseMultipart(body: Buffer, boundary: string): Part[] {
 // https://vite.dev/config/
 export default defineConfig({
   base: '/',
-  plugins: [inspectAttr(), react(), galleryApiPlugin()],
+  plugins: [inspectAttr(), react(), metingPlugin(), galleryApiPlugin()],
   server: {
     port: 3000,
   },

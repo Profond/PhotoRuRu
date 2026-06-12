@@ -1,8 +1,8 @@
 export const musicConfig = {
   /** Set to false to disable music player entirely */
   enable: true,
-  /** Meting API endpoint (public or self-hosted) */
-  metingApi: 'https://api.injahow.cn/meting/',
+  /** Meting API endpoint (self-hosted Netlify Function) */
+  metingApi: '/api/meting',
   /** Music server: 'netease' for NetEase Cloud Music, 'tencent' for QQ Music */
   server: 'netease' as 'netease' | 'tencent',
   /** Resource type: 'playlist', 'song', 'album', 'artist', 'search' */
