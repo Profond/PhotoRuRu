@@ -90,13 +90,19 @@ function metingPlugin(): Plugin {
             ((urlData as any).data ?? []).map((u: any) => [u.id, u.url])
           );
 
-          const result = tracks.map((track: any, i: number) => ({
-            name: track.name || "Unknown",
-            artist: (track.ar || []).map((a: any) => a.name).join(" / "),
-            url: urlMap.get(track.id) || "",
-            cover: track.al?.picUrl ? track.al.picUrl + "?param=300y300" : "",
-            lrc: lyricsArr[i] || "",
-          }));
+          const result = tracks.map((track: any, i: number) => {
+            let songUrl = urlMap.get(track.id) || "";
+            if (songUrl.startsWith("http://")) songUrl = "https://" + songUrl.slice(7);
+            let cover = track.al?.picUrl ? track.al.picUrl + "?param=300y300" : "";
+            if (cover.startsWith("http://")) cover = "https://" + cover.slice(7);
+            return {
+              name: track.name || "Unknown",
+              artist: (track.ar || []).map((a: any) => a.name).join(" / "),
+              url: songUrl,
+              cover,
+              lrc: lyricsArr[i] || "",
+            };
+          });
 
           res.end(JSON.stringify(result));
         } catch (err) {
