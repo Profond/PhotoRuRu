@@ -11,6 +11,9 @@ interface MusicState {
   currentArtist: string;
 }
 
+// Use Netlify redirect proxy to reach SCF API (avoids browser CORS/network issues)
+const NCM_BASE = '/api/ncm';
+
 export function useMusicPlayer() {
   const apRef = useRef<APlayer | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -26,22 +29,59 @@ export function useMusicPlayer() {
   useEffect(() => {
     if (!musicConfig.enable) return;
 
-    // Create hidden container for APlayer
     const container = document.createElement('div');
     container.style.display = 'none';
     document.body.appendChild(container);
     containerRef.current = container;
 
-    const apiUrl = musicConfig.metingApi
-      + '?server=' + musicConfig.server
-      + '&type=' + musicConfig.type
-      + '&id=' + musicConfig.id
-      + '&r=' + Math.random();
+    async function loadMusic() {
+      try {
+        // 1. Fetch playlist
+        const playlistRes = await fetch(`${NCM_BASE}/playlist/detail?id=${musicConfig.id}`);
+        const playlistData = await playlistRes.json();
+        const tracks: any[] = playlistData.playlist?.tracks ?? [];
+        if (!tracks.length) return;
 
-    fetch(apiUrl)
-      .then((res) => res.json())
-      .then((audioList: Array<{ name: string; artist: string; url: string; cover: string; lrc: string }>) => {
-        if (!audioList || !audioList.length) return;
+        const ids = tracks.map((t: any) => t.id);
+
+        // 2. Fetch song URLs one by one (SCF rate-limits batch requests from proxy)
+        const urlMap = new Map<number, string>();
+        for (const tid of ids) {
+          try {
+            const r = await fetch(`${NCM_BASE}/song/url?id=${tid}&br=128000`);
+            const d = await r.json();
+            if (d.data?.[0]?.url) {
+              let url: string = d.data[0].url;
+              if (url.startsWith('http://')) url = 'https://' + url.slice(7);
+              urlMap.set(tid, url);
+            }
+          } catch { /* skip */ }
+        }
+
+        // 3. Fetch lyrics in parallel (lightweight, less likely to be blocked)
+        const lyricsArr = await Promise.all(
+          ids.map((tid: number) =>
+            fetch(`${NCM_BASE}/lyric?id=${tid}`)
+              .then((r) => r.json())
+              .then((d: any) => d.lrc?.lyric ?? '')
+              .catch(() => '')
+          )
+        );
+
+        // 4. Build audio list
+        const audioList = tracks.map((track: any, i: number) => {
+          let cover = track.al?.picUrl ? track.al.picUrl + '?param=300y300' : '';
+          if (cover.startsWith('http://')) cover = 'https://' + cover.slice(7);
+          return {
+            name: track.name || 'Unknown',
+            artist: (track.ar || []).map((a: any) => a.name).join(' / '),
+            url: urlMap.get(track.id) || '',
+            cover,
+            lrc: lyricsArr[i] || '',
+          };
+        });
+
+        if (!audioList.length) return;
 
         const ap = new APlayer({
           container,
@@ -53,7 +93,6 @@ export function useMusicPlayer() {
 
         apRef.current = ap;
 
-        // Sync initial track info
         const current = ap.list.audios[ap.list.index];
         if (current) {
           setState((s) => ({ ...s, currentTitle: current.name, currentArtist: current.artist }));
@@ -68,25 +107,18 @@ export function useMusicPlayer() {
           }
         });
         ap.on('ended', () => {
-          // Loop: go back to first track when playlist ends
           if (ap.list.index >= ap.list.audios.length - 1) {
             ap.list.switch(0);
             ap.play();
           }
         });
 
-        // Attempt autoplay; browsers may block it without user gesture,
-        // so also register a one-shot interaction listener as fallback.
         if (musicConfig.autoplay) {
           const tryPlay = () => {
             if (apRef.current && !apRef.current.audio.paused) return;
             apRef.current?.play();
           };
-
-          // Try immediate play first
           tryPlay();
-
-          // If still paused after a tick, wait for user interaction
           setTimeout(() => {
             if (apRef.current && apRef.current.audio.paused) {
               const onInteraction = () => {
@@ -105,8 +137,12 @@ export function useMusicPlayer() {
             }
           }, 500);
         }
-      })
-      .catch((err) => { console.error('Music load error:', err); });
+      } catch (err) {
+        console.error('Music load error:', err);
+      }
+    }
+
+    loadMusic();
 
     return () => {
       cleanupInteractionRef.current?.();
@@ -116,30 +152,14 @@ export function useMusicPlayer() {
     };
   }, []);
 
-  const toggle = useCallback(() => {
-    apRef.current?.toggle();
-  }, []);
-
-  const next = useCallback(() => {
-    apRef.current?.skipForward();
-    apRef.current?.play();
-  }, []);
-
-  const prev = useCallback(() => {
-    apRef.current?.skipBack();
-    apRef.current?.play();
-  }, []);
-
-  const setVolume = useCallback((v: number) => {
-    apRef.current?.volume(v, true);
-    setState((s) => ({ ...s, volume: v }));
-  }, []);
-
+  const toggle = useCallback(() => { apRef.current?.toggle(); }, []);
+  const next = useCallback(() => { apRef.current?.skipForward(); apRef.current?.play(); }, []);
+  const prev = useCallback(() => { apRef.current?.skipBack(); apRef.current?.play(); }, []);
+  const setVolume = useCallback((v: number) => { apRef.current?.volume(v, true); setState((s) => ({ ...s, volume: v })); }, []);
   const toggleMute = useCallback(() => {
     if (!apRef.current) return;
-    const muted = apRef.current.audio.muted;
-    apRef.current.audio.muted = !muted;
-    setState((s) => ({ ...s, muted: !muted }));
+    apRef.current.audio.muted = !apRef.current.audio.muted;
+    setState((s) => ({ ...s, muted: !s.muted }));
   }, []);
 
   return { ...state, toggle, next, prev, setVolume, toggleMute, enabled: musicConfig.enable };
