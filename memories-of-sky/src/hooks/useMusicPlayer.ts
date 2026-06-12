@@ -11,6 +11,8 @@ interface MusicState {
   currentArtist: string;
 }
 
+const SCF_BASE = 'https://1306193308-goczfijoz5.ap-guangzhou.tencentscf.com';
+
 export function useMusicPlayer() {
   const apRef = useRef<APlayer | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -26,22 +28,62 @@ export function useMusicPlayer() {
   useEffect(() => {
     if (!musicConfig.enable) return;
 
-    // Create hidden container for APlayer
     const container = document.createElement('div');
     container.style.display = 'none';
     document.body.appendChild(container);
     containerRef.current = container;
 
-    const apiUrl = musicConfig.metingApi
-      + '?server=' + musicConfig.server
-      + '&type=' + musicConfig.type
-      + '&id=' + musicConfig.id
-      + '&r=' + Math.random();
+    async function loadMusic() {
+      try {
+        // 1. Fetch playlist tracks
+        const playlistRes = await fetch(`${SCF_BASE}/playlist/detail?id=${musicConfig.id}`);
+        const playlistData = await playlistRes.json();
+        const tracks: any[] = playlistData.playlist?.tracks ?? [];
+        if (!tracks.length) return;
 
-    fetch(apiUrl)
-      .then((res) => res.json())
-      .then((audioList: Array<{ name: string; artist: string; url: string; cover: string; lrc: string }>) => {
-        if (!audioList || !audioList.length) return;
+        const trackIds = tracks.map((t: any) => String(t.id));
+
+        // 2. Fetch song URLs in batches of 10
+        const urlMap = new Map<number, string>();
+        for (let i = 0; i < trackIds.length; i += 10) {
+          const batch = trackIds.slice(i, i + 10);
+          try {
+            const res = await fetch(`${SCF_BASE}/song/url?id=${batch.join(',')}&br=128000`);
+            const data = await res.json();
+            (data.data ?? []).forEach((u: any) => {
+              if (u.url) {
+                let url = u.url;
+                if (url.startsWith('http://')) url = 'https://' + url.slice(7);
+                urlMap.set(u.id, url);
+              }
+            });
+          } catch { /* skip failed batch */ }
+        }
+
+        // 3. Fetch lyrics in parallel
+        const lyricsArr = await Promise.all(
+          trackIds.map((tid: string) =>
+            fetch(`${SCF_BASE}/lyric?id=${tid}`)
+              .then((r) => r.json())
+              .then((d: any) => d.lrc?.lyric ?? '')
+              .catch(() => '')
+          )
+        );
+
+        // 4. Build APlayer audio list
+        const audioList = tracks.map((track: any, i: number) => {
+          let cover = track.al?.picUrl ? track.al.picUrl + '?param=300y300' : '';
+          if (cover.startsWith('http://')) cover = 'https://' + cover.slice(7);
+          return {
+            name: track.name || 'Unknown',
+            artist: (track.ar || []).map((a: any) => a.name).join(' / '),
+            url: urlMap.get(track.id) || '',
+            cover,
+            lrc: lyricsArr[i] || '',
+          };
+        });
+
+        if (!audioList.length) return;
 
         const ap = new APlayer({
           container,
@@ -53,7 +95,6 @@ export function useMusicPlayer() {
 
         apRef.current = ap;
 
-        // Sync initial track info
         const current = ap.list.audios[ap.list.index];
         if (current) {
           setState((s) => ({ ...s, currentTitle: current.name, currentArtist: current.artist }));
@@ -68,25 +109,18 @@ export function useMusicPlayer() {
           }
         });
         ap.on('ended', () => {
-          // Loop: go back to first track when playlist ends
           if (ap.list.index >= ap.list.audios.length - 1) {
             ap.list.switch(0);
             ap.play();
           }
         });
 
-        // Attempt autoplay; browsers may block it without user gesture,
-        // so also register a one-shot interaction listener as fallback.
         if (musicConfig.autoplay) {
           const tryPlay = () => {
             if (apRef.current && !apRef.current.audio.paused) return;
             apRef.current?.play();
           };
-
-          // Try immediate play first
           tryPlay();
-
-          // If still paused after a tick, wait for user interaction
           setTimeout(() => {
             if (apRef.current && apRef.current.audio.paused) {
               const onInteraction = () => {
@@ -105,8 +139,10 @@ export function useMusicPlayer() {
             }
           }, 500);
         }
-      })
-      .catch(() => { /* silently fail if API unreachable */ });
+      } catch { /* silently fail */ }
+    }
+
+    loadMusic();
 
     return () => {
       cleanupInteractionRef.current?.();
