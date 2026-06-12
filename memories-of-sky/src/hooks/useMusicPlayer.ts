@@ -36,9 +36,11 @@ export function useMusicPlayer() {
     async function loadMusic() {
       try {
         // 1. Fetch playlist tracks
+        console.log('[Music] Fetching playlist...');
         const playlistRes = await fetch(`${SCF_BASE}/playlist/detail?id=${musicConfig.id}`);
         const playlistData = await playlistRes.json();
         const tracks: any[] = playlistData.playlist?.tracks ?? [];
+        console.log('[Music] Tracks:', tracks.length);
         if (!tracks.length) return;
 
         const trackIds = tracks.map((t: any) => String(t.id));
@@ -59,6 +61,8 @@ export function useMusicPlayer() {
             });
           } catch { /* skip failed batch */ }
         }
+
+        console.log('[Music] URL map size:', urlMap.size);
 
         // 3. Fetch lyrics in parallel
         const lyricsArr = await Promise.all(
@@ -83,6 +87,7 @@ export function useMusicPlayer() {
           };
         });
 
+        console.log('[Music] Audio list:', audioList.length, 'with URL:', audioList.filter(a => a.url).length);
         if (!audioList.length) return;
 
         const ap = new APlayer({
@@ -139,7 +144,7 @@ export function useMusicPlayer() {
             }
           }, 500);
         }
-      } catch { /* silently fail */ }
+      } catch (err) { console.error('Music load error:', err); }
     }
 
     loadMusic();
