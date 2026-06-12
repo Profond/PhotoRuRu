@@ -44,22 +44,34 @@ export default async (req: Request) => {
 
     const trackIds = tracks.map((t: any) => String(t.id));
 
-    const [urlData, ...lyricsArr] = await Promise.all([
-      fetchJson<any>(`${API_BASE}/song/url?id=${trackIds.join(",")}&br=128000`),
-      ...trackIds.map((tid: string) =>
-        fetchJson<any>(`${API_BASE}/lyric?id=${tid}`).then(
-          (d: any) => d.lrc?.lyric ?? ""
-        )
-      ),
-    ]);
+    // Fetch song URLs in batches of 10 to avoid timeout/rate-limit issues
+    const BATCH_SIZE = 10;
+    const urlMap = new Map<number, string>();
+    for (let i = 0; i < trackIds.length; i += BATCH_SIZE) {
+      const batch = trackIds.slice(i, i + BATCH_SIZE);
+      try {
+        const data = await fetchJson<any>(
+          `${API_BASE}/song/url?id=${batch.join(",")}&br=128000`
+        );
+        (data.data ?? []).forEach((u: any) => {
+          if (u.url) urlMap.set(u.id, u.url);
+        });
+      } catch {
+        // Skip failed batch
+      }
+    }
 
-    const urlMap = new Map(
-      (urlData.data ?? []).map((u: any) => [u.id, u.url])
+    // Fetch lyrics in parallel (lighter requests, less likely to fail)
+    const lyricsArr = await Promise.all(
+      trackIds.map((tid: string) =>
+        fetchJson<any>(`${API_BASE}/lyric?id=${tid}`)
+          .then((d: any) => d.lrc?.lyric ?? "")
+          .catch(() => "")
+      )
     );
 
     const result = tracks.map((track: any, i: number) => {
       let songUrl = urlMap.get(track.id) || "";
-      // Force HTTPS to avoid mixed-content blocking on HTTPS sites
       if (songUrl.startsWith("http://")) {
         songUrl = "https://" + songUrl.slice(7);
       }
