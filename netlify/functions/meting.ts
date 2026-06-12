@@ -1,12 +1,17 @@
 import type { Config } from "@netlify/functions";
 
-// @ts-ignore - no type declarations
-import NeteaseCloudMusicApi from "NeteaseCloudMusicApi";
-
 /**
- * Self-hosted Meting API proxy using NeteaseCloudMusicApi.
+ * Meting API proxy — forwards to self-hosted NeteaseCloudMusicApi on Tencent SCF.
  * Returns APlayer-compatible audio list: [{ name, artist, url, cover, lrc }]
  */
+
+const API_BASE = "https://1306193308-goczfijoz5.ap-guangzhou.tencentscf.com";
+
+async function fetchJson<T>(url: string): Promise<T> {
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return res.json() as Promise<T>;
+}
 
 export default async (req: Request) => {
   const url = new URL(req.url);
@@ -19,67 +24,51 @@ export default async (req: Request) => {
   }
 
   if (server !== "netease") {
-    return Response.json(
-      { error: `Unsupported server: ${server}` },
-      { status: 400 }
-    );
+    return Response.json({ error: `Unsupported server: ${server}` }, { status: 400 });
   }
 
   try {
     let tracks: any[] = [];
 
     if (type === "playlist") {
-      const data = await NeteaseCloudMusicApi.playlist_detail({ id });
-      tracks = data.body?.playlist?.tracks ?? [];
+      const data = await fetchJson<any>(`${API_BASE}/playlist/detail?id=${id}`);
+      tracks = data.playlist?.tracks ?? [];
     } else if (type === "song") {
-      const data = await NeteaseCloudMusicApi.song_detail({ ids: id });
-      tracks = data.body?.songs ?? [];
+      const data = await fetchJson<any>(`${API_BASE}/song/detail?ids=${id}`);
+      tracks = data.songs ?? [];
     } else {
-      return Response.json(
-        { error: `Unsupported type: ${type}` },
-        { status: 400 }
-      );
+      return Response.json({ error: `Unsupported type: ${type}` }, { status: 400 });
     }
 
-    if (!tracks.length) {
-      return Response.json([]);
-    }
+    if (!tracks.length) return Response.json([]);
 
     const trackIds = tracks.map((t: any) => String(t.id));
 
-    // Fetch song URLs and lyrics in parallel
     const [urlData, ...lyricsArr] = await Promise.all([
-      NeteaseCloudMusicApi.song_url({ id: trackIds.join(","), br: 128000 }),
+      fetchJson<any>(`${API_BASE}/song/url?id=${trackIds.join(",")}&br=128000`),
       ...trackIds.map((tid: string) =>
-        NeteaseCloudMusicApi.lyric({ id: tid }).then(
-          (d: any) => d.body?.lrc?.lyric ?? ""
+        fetchJson<any>(`${API_BASE}/lyric?id=${tid}`).then(
+          (d: any) => d.lrc?.lyric ?? ""
         )
       ),
     ]);
 
     const urlMap = new Map(
-      (urlData.body?.data ?? []).map((u: any) => [u.id, u.url])
+      (urlData.data ?? []).map((u: any) => [u.id, u.url])
     );
 
     const result = tracks.map((track: any, i: number) => ({
       name: track.name || "Unknown",
-      artist: (track.ar || [])
-        .map((a: any) => a.name)
-        .join(" / "),
+      artist: (track.ar || []).map((a: any) => a.name).join(" / "),
       url: urlMap.get(track.id) || "",
-      cover: track.al?.picUrl
-        ? track.al.picUrl + "?param=300y300"
-        : "",
+      cover: track.al?.picUrl ? track.al.picUrl + "?param=300y300" : "",
       lrc: lyricsArr[i] || "",
     }));
 
     return Response.json(result);
   } catch (err) {
     console.error("Meting proxy error:", err);
-    return Response.json(
-      { error: "Failed to fetch music data" },
-      { status: 500 }
-    );
+    return Response.json({ error: "Failed to fetch music data" }, { status: 500 });
   }
 };
 

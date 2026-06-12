@@ -22,8 +22,16 @@ function writeManifest(files: string[]) {
   fs.writeFileSync(MANIFEST, JSON.stringify(files, null, 2))
 }
 
-/** Local Meting API proxy using NeteaseCloudMusicApi */
+/** Local Meting API proxy — forwards to Tencent SCF NeteaseCloudMusicApi */
 function metingPlugin(): Plugin {
+  const SCF_BASE = "https://1306193308-goczfijoz5.ap-guangzhou.tencentscf.com";
+
+  async function fetchJson(url: string) {
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return res.json();
+  }
+
   return {
     name: 'meting-api',
     configureServer(server) {
@@ -48,16 +56,14 @@ function metingPlugin(): Plugin {
         }
 
         try {
-          // Dynamic import to avoid issues with CJS module
-          const NeteaseCloudMusicApi = (await import('NeteaseCloudMusicApi')).default || (await import('NeteaseCloudMusicApi'));
           let tracks: any[] = [];
 
           if (type === "playlist") {
-            const data = await NeteaseCloudMusicApi.playlist_detail({ id });
-            tracks = data.body?.playlist?.tracks ?? [];
+            const data: any = await fetchJson(`${SCF_BASE}/playlist/detail?id=${id}`);
+            tracks = data.playlist?.tracks ?? [];
           } else if (type === "song") {
-            const data = await NeteaseCloudMusicApi.song_detail({ ids: id });
-            tracks = data.body?.songs ?? [];
+            const data: any = await fetchJson(`${SCF_BASE}/song/detail?ids=${id}`);
+            tracks = data.songs ?? [];
           } else {
             res.statusCode = 400;
             res.end(JSON.stringify({ error: `Unsupported type: ${type}` }));
@@ -72,16 +78,16 @@ function metingPlugin(): Plugin {
           const trackIds = tracks.map((t: any) => String(t.id));
 
           const [urlData, ...lyricsArr] = await Promise.all([
-            NeteaseCloudMusicApi.song_url({ id: trackIds.join(","), br: 128000 }),
+            fetchJson(`${SCF_BASE}/song/url?id=${trackIds.join(",")}&br=128000`),
             ...trackIds.map((tid: string) =>
-              NeteaseCloudMusicApi.lyric({ id: tid }).then(
-                (d: any) => d.body?.lrc?.lyric ?? ""
+              fetchJson(`${SCF_BASE}/lyric?id=${tid}`).then(
+                (d: any) => d.lrc?.lyric ?? ""
               )
             ),
           ]);
 
           const urlMap = new Map(
-            (urlData.body?.data ?? []).map((u: any) => [u.id, u.url])
+            ((urlData as any).data ?? []).map((u: any) => [u.id, u.url])
           );
 
           const result = tracks.map((track: any, i: number) => ({
