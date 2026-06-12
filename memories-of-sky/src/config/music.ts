@@ -8,7 +8,7 @@ export const musicConfig = {
   /** Resource type: 'playlist', 'song', 'album', 'artist', 'search' */
   type: 'playlist' as 'playlist' | 'song' | 'album' | 'artist',
   /** Playlist / song / album ID */
-  id: '7983425849',
+  id: '138781811',
   /** Auto-play on load (may be blocked by browser) */
   autoplay: true,
   /** Default volume 0-1 */
