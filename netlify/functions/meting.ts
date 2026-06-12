@@ -7,12 +7,6 @@ import type { Config } from "@netlify/functions";
 
 const API_BASE = "https://1306193308-goczfijoz5.ap-guangzhou.tencentscf.com";
 
-async function fetchJson<T>(url: string): Promise<T> {
-  const res = await fetch(url);
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  return res.json() as Promise<T>;
-}
-
 export default async (req: Request) => {
   const url = new URL(req.url);
   const server = url.searchParams.get("server") || "netease";
@@ -20,7 +14,7 @@ export default async (req: Request) => {
   const id = url.searchParams.get("id");
 
   if (!id) {
-    return Response.json({ error: "Missing id parameter" }, { status: 400 });
+    return Response.json({ error: "Missing id" }, { status: 400 });
   }
 
   if (server !== "netease") {
@@ -28,61 +22,60 @@ export default async (req: Request) => {
   }
 
   try {
-    let tracks: any[] = [];
-
-    if (type === "playlist") {
-      const data = await fetchJson<any>(`${API_BASE}/playlist/detail?id=${id}`);
-      tracks = data.playlist?.tracks ?? [];
-    } else if (type === "song") {
-      const data = await fetchJson<any>(`${API_BASE}/song/detail?ids=${id}`);
-      tracks = data.songs ?? [];
-    } else {
-      return Response.json({ error: `Unsupported type: ${type}` }, { status: 400 });
-    }
+    // 1. Fetch playlist tracks
+    const playlistRes = await fetch(`${API_BASE}/playlist/detail?id=${id}`);
+    const playlistData = await playlistRes.json();
+    const tracks: any[] = playlistData.playlist?.tracks ?? [];
 
     if (!tracks.length) return Response.json([]);
 
-    const trackIds = tracks.map((t: any) => String(t.id));
+    const trackIds = tracks.map((t: any) => t.id);
 
-    // Fetch song URLs in batches of 10 to avoid timeout/rate-limit issues
-    const BATCH_SIZE = 10;
+    // 2. Fetch song URLs in batches of 10
     const urlMap = new Map<number, string>();
-    for (let i = 0; i < trackIds.length; i += BATCH_SIZE) {
-      const batch = trackIds.slice(i, i + BATCH_SIZE);
+    for (let i = 0; i < trackIds.length; i += 10) {
+      const batch = trackIds.slice(i, i + 10);
       try {
-        const data = await fetchJson<any>(
+        const res = await fetch(
           `${API_BASE}/song/url?id=${batch.join(",")}&br=128000`
         );
-        (data.data ?? []).forEach((u: any) => {
-          if (u.url) urlMap.set(u.id, u.url);
-        });
+        const data: any = await res.json();
+        for (const u of data.data ?? []) {
+          if (u.url) {
+            let songUrl: string = u.url;
+            if (songUrl.startsWith("http://")) {
+              songUrl = "https://" + songUrl.slice(7);
+            }
+            urlMap.set(u.id, songUrl);
+          }
+        }
+      } catch { /* skip failed batch */ }
+    }
+
+    // 3. Fetch lyrics (sequentially to avoid overwhelming SCF)
+    const lyricsArr: string[] = [];
+    for (const tid of trackIds) {
+      try {
+        const res = await fetch(`${API_BASE}/lyric?id=${tid}`);
+        const data: any = await res.json();
+        lyricsArr.push(data.lrc?.lyric ?? "");
       } catch {
-        // Skip failed batch
+        lyricsArr.push("");
       }
     }
 
-    // Fetch lyrics in parallel (lighter requests, less likely to fail)
-    const lyricsArr = await Promise.all(
-      trackIds.map((tid: string) =>
-        fetchJson<any>(`${API_BASE}/lyric?id=${tid}`)
-          .then((d: any) => d.lrc?.lyric ?? "")
-          .catch(() => "")
-      )
-    );
-
+    // 4. Build result
     const result = tracks.map((track: any, i: number) => {
-      let songUrl = urlMap.get(track.id) || "";
-      if (songUrl.startsWith("http://")) {
-        songUrl = "https://" + songUrl.slice(7);
-      }
-      let cover = track.al?.picUrl ? track.al.picUrl + "?param=300y300" : "";
+      let cover = track.al?.picUrl
+        ? track.al.picUrl + "?param=300y300"
+        : "";
       if (cover.startsWith("http://")) {
         cover = "https://" + cover.slice(7);
       }
       return {
         name: track.name || "Unknown",
         artist: (track.ar || []).map((a: any) => a.name).join(" / "),
-        url: songUrl,
+        url: urlMap.get(track.id) || "",
         cover,
         lrc: lyricsArr[i] || "",
       };
@@ -91,7 +84,10 @@ export default async (req: Request) => {
     return Response.json(result);
   } catch (err) {
     console.error("Meting proxy error:", err);
-    return Response.json({ error: "Failed to fetch music data" }, { status: 500 });
+    return Response.json(
+      { error: "Failed to fetch music data" },
+      { status: 500 }
+    );
   }
 };
 
