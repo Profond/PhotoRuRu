@@ -5,9 +5,11 @@
     "dev": "cd memories-of-sky && npm run dev"
   },
   "dependencies": {
-    "@vercel/blob": "^0.27.0"
+    "@vercel/blob": "^0.27.0",
+    "NeteaseCloudMusicApi": "^4.32.0"
   },
   "devDependencies": {
+    "@netlify/functions": "^4.2.5",
     "@vercel/node": "^3.0.0"
   }
 }
